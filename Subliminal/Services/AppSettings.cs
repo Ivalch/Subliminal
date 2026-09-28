@@ -1,10 +1,8 @@
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.IO;
 using System.Runtime.Serialization;
 using System.Runtime.Serialization.Json;
-using System.Text;
 
 namespace Subliminal.Services
 {
@@ -19,6 +17,9 @@ namespace Subliminal.Services
             "Subliminal",
             "settings.json");
 
+        private static readonly DataContractJsonSerializer Serializer =
+            new DataContractJsonSerializer(typeof(AppSettings));
+
         [DataMember]
         public bool StartWithWindows { get; set; }
 
@@ -31,9 +32,8 @@ namespace Subliminal.Services
         public int Transparency { get; set; } = 95;
 
         /// <summary>
-        /// One stored string per line typed in the Settings text editor. Persisted as a
-        /// JSON array so every line is an independent entry rather than one blob with
-        /// embedded newlines.
+        /// One stored string per line typed in the Settings text editor, so each line is an
+        /// independent setting rather than one blob with embedded newlines.
         /// </summary>
         [DataMember]
         public List<string> TextLines { get; set; } = new List<string>();
@@ -93,22 +93,13 @@ namespace Subliminal.Services
                     return new AppSettings();
                 }
 
-                // Reading stays with the framework serializer so malformed or unexpected
-                // files are handled properly rather than by hand-rolled parsing.
-                var serializer = new DataContractJsonSerializer(typeof(AppSettings));
                 AppSettings loaded;
                 using (var stream = File.OpenRead(SettingsPath))
                 {
-                    loaded = serializer.ReadObject(stream) as AppSettings;
+                    loaded = Serializer.ReadObject(stream) as AppSettings;
                 }
 
-                if (loaded == null)
-                {
-                    return new AppSettings();
-                }
-
-                loaded.Normalize();
-                return loaded;
+                return loaded == null ? new AppSettings() : Normalize(loaded);
             }
             catch (Exception ex)
             {
@@ -133,12 +124,12 @@ namespace Subliminal.Services
                     TextLines = new List<string>();
                 }
 
-                // UTF8Encoding(false) omits the byte-order mark. DataContractJsonSerializer
-                // throws when it meets a BOM, which would make every read fall back to
+                // File.Create writes a raw stream with no byte-order mark. The serializer
+                // throws when it reads a BOM, which would make every load fall back to
                 // defaults and silently discard the saved settings.
-                using (var writer = new StreamWriter(SettingsPath, false, new UTF8Encoding(false)))
+                using (var stream = File.Create(SettingsPath))
                 {
-                    WriteTo(writer);
+                    Serializer.WriteObject(stream, this);
                 }
             }
             catch (Exception ex)
@@ -148,92 +139,32 @@ namespace Subliminal.Services
         }
 
         /// <summary>
-        /// Writes the file with each stored string on its own line. The framework's
-        /// serializer cannot do this: DataContractJsonSerializerSettings.Indent does not
-        /// exist on .NET Framework, so it would emit everything on a single line.
-        /// </summary>
-        private void WriteTo(TextWriter writer)
-        {
-            writer.WriteLine("{");
-            writer.WriteLine("  \"StartWithWindows\": " + (StartWithWindows ? "true" : "false") + ",");
-            writer.WriteLine("  \"EditColorHex\": " + Quote(EditColorHex) + ",");
-            writer.WriteLine("  \"Transparency\": " + Transparency.ToString(CultureInfo.InvariantCulture) + ",");
-            writer.WriteLine("  \"TextLines\": [");
-
-            for (var i = 0; i < TextLines.Count; i++)
-            {
-                var comma = i < TextLines.Count - 1 ? "," : string.Empty;
-                writer.WriteLine("    " + Quote(TextLines[i]) + comma);
-            }
-
-            writer.WriteLine("  ]");
-            writer.WriteLine("}");
-        }
-
-        private static string Quote(string value)
-        {
-            if (value == null)
-            {
-                return "null";
-            }
-
-            var sb = new StringBuilder(value.Length + 2);
-            sb.Append('"');
-
-            foreach (var c in value)
-            {
-                switch (c)
-                {
-                    case '"': sb.Append("\\\""); break;
-                    case '\\': sb.Append("\\\\"); break;
-                    case '\b': sb.Append("\\b"); break;
-                    case '\f': sb.Append("\\f"); break;
-                    case '\n': sb.Append("\\n"); break;
-                    case '\r': sb.Append("\\r"); break;
-                    case '\t': sb.Append("\\t"); break;
-                    default:
-                        if (c < ' ')
-                        {
-                            sb.Append("\\u").Append(((int)c).ToString("x4", CultureInfo.InvariantCulture));
-                        }
-                        else
-                        {
-                            sb.Append(c);
-                        }
-
-                        break;
-                }
-            }
-
-            sb.Append('"');
-            return sb.ToString();
-        }
-
-        /// <summary>
         /// Restores invariants the deserializer does not guarantee. DataContractJsonSerializer
         /// creates instances without running field initialisers, so reference-typed members
         /// arrive null even when the file omits them.
         /// </summary>
-        private void Normalize()
+        private static AppSettings Normalize(AppSettings settings)
         {
-            if (TextLines == null)
+            if (settings.TextLines == null)
             {
-                TextLines = new List<string>();
+                settings.TextLines = new List<string>();
             }
 
-            if (EditColorHex == null)
+            if (settings.EditColorHex == null)
             {
-                EditColorHex = "#60A5FA";
+                settings.EditColorHex = "#60A5FA";
             }
 
-            if (Transparency < 0)
+            if (settings.Transparency < 0)
             {
-                Transparency = 0;
+                settings.Transparency = 0;
             }
-            else if (Transparency > 100)
+            else if (settings.Transparency > 100)
             {
-                Transparency = 100;
+                settings.Transparency = 100;
             }
+
+            return settings;
         }
     }
 }
