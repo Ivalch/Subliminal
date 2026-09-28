@@ -3,6 +3,7 @@ using System.ComponentModel;
 using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Interop;
+using System.Windows.Threading;
 
 namespace Subliminal
 {
@@ -19,7 +20,10 @@ namespace Subliminal
         /// <summary>The window may never be wider than this many times its height.</summary>
         private const double MaxAspectRatio = 5.0;
 
+        private readonly Random _placement = new Random();
+
         private INotifyPropertyChanged _viewModel;
+        private bool _placementPending;
 
         [DllImport("user32.dll")]
         private static extern int GetWindowLong(IntPtr hWnd, int nIndex);
@@ -38,15 +42,10 @@ namespace Subliminal
             MaxWidth = area.Width * 0.8;
             MaxHeight = area.Height * 0.7;
 
-            // Each new line can change the size, so re-centre to keep the text in the
-            // middle of the screen. This is not visible in practice: the ViewModel swaps
-            // the line at the start of the appear phase, when the text is fully
-            // transparent. Moving the window does not change its size, so this cannot loop.
-            SizeChanged += (sender, e) =>
-            {
-                CenterOnWorkArea();
-                EnforceAspectRatio();
-            };
+            // Each new line can change the size, so the 5:1 cap has to be re-checked. Only
+            // the aspect ratio is enforced here; the position is chosen per message, since
+            // moving the window does not change its size and so cannot loop.
+            SizeChanged += (sender, e) => EnforceAspectRatio();
 
             DataContextChanged += OnDataContextChanged;
         }
@@ -55,10 +54,9 @@ namespace Subliminal
         {
             base.OnContentRendered(e);
 
-            // Centred here rather than via WindowStartupLocation, because the actual size
-            // is only known once the window has been laid out.
-            CenterOnWorkArea();
-            EnforceAspectRatio();
+            // Catches the case where the placement was requested before the window had
+            // been laid out and so had nothing to position.
+            TryPlacePending();
         }
 
         /// <summary>
@@ -81,15 +79,61 @@ namespace Subliminal
         }
 
         /// <summary>
-        /// Clears the width cap when a new line arrives, so a long message does not leave
-        /// the overlay narrow for the shorter ones that follow. Runs while the text is
-        /// fully transparent, so it is never visible.
+        /// Moves the overlay to a random spot on each new message, so consecutive lines do
+        /// not sit in the same place. The window is kept whole inside the work area: the
+        /// random offset is limited to the slack left after the window is placed, and a
+        /// window larger than the work area is pinned to its top-left corner.
+        /// </summary>
+        private void PlaceRandomlyInWorkArea()
+        {
+            var area = SystemParameters.WorkArea;
+
+            var slackX = area.Width - ActualWidth;
+            var slackY = area.Height - ActualHeight;
+
+            if (slackX <= 0 || slackY <= 0)
+            {
+                Left = area.Left;
+                Top = area.Top;
+                return;
+            }
+
+            Left = area.Left + (int)(_placement.NextDouble() * slackX);
+            Top = area.Top + (int)(_placement.NextDouble() * slackY);
+        }
+
+        private void RequestPlacement()
+        {
+            _placementPending = true;
+
+            // At ContextIdle the layout for the new text has settled, so the window has a
+            // real size to position. Runs while the text is fully transparent, so the
+            // move is not visible.
+            Dispatcher.BeginInvoke(DispatcherPriority.ContextIdle, new Action(TryPlacePending));
+        }
+
+        private void TryPlacePending()
+        {
+            if (!_placementPending || ActualWidth <= 0 || ActualHeight <= 0)
+            {
+                return;
+            }
+
+            EnforceAspectRatio();
+            PlaceRandomlyInWorkArea();
+            _placementPending = false;
+        }
+
+        /// <summary>
+        /// A new line needs a fresh width cap and a fresh position. Runs while the text is
+        /// fully transparent, so neither is ever visible.
         /// </summary>
         private void OnViewModelPropertyChanged(object sender, PropertyChangedEventArgs e)
         {
             if (e.PropertyName == "DisplayText")
             {
                 MessageText.MaxWidth = double.PositiveInfinity;
+                RequestPlacement();
             }
         }
 
