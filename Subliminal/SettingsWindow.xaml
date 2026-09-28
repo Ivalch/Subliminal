@@ -84,16 +84,24 @@
                 </Grid>
 
                 <!-- Text -->
+                <!--
+                  A Grid with a star column is used deliberately: the caption sits above the
+                  field, and a * column constrains the TextBox to the available width. Inside a
+                  vertical StackPanel a NoWrap TextBox reports its full text width, which
+                  inflates the whole content block and overflows the window.
+                -->
                 <Grid Margin="0,8">
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto" />
                         <ColumnDefinition Width="*" />
                     </Grid.ColumnDefinitions>
-                    <TextBlock Grid.Column="0"
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+                    <TextBlock Grid.Row="0"
                                Text="Text"
-                               VerticalAlignment="Top"
-                               Margin="0,2,8,0" />
-                    <TextBox Grid.Column="1"
+                               Margin="0,0,0,4" />
+                    <TextBox Grid.Row="1"
                              Height="120"
                              AcceptsReturn="True"
                              TextWrapping="NoWrap"
