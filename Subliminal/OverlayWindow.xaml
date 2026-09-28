@@ -22,7 +22,8 @@
       stays fully transparent; only the text is affected.
     -->
     <Border Opacity="{Binding CurrentOpacity}">
-        <TextBlock Text="{Binding DisplayText}"
+        <TextBlock x:Name="MessageText"
+                   Text="{Binding DisplayText}"
                    Foreground="{Binding ColorHex, Converter={StaticResource HexToBrush}}"
                    FontSize="{Binding FontSize}"
                    FontWeight="SemiBold"
