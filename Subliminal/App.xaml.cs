@@ -10,6 +10,8 @@ namespace Subliminal
         private AppSettings _settings;
         private TrayIconService _trayIcon;
         private SettingsWindow _settingsWindow;
+        private OverlayWindow _overlayWindow;
+        private OverlayViewModel _overlayViewModel;
 
         protected override void OnStartup(StartupEventArgs e)
         {
@@ -25,6 +27,22 @@ namespace Subliminal
             _trayIcon = new TrayIconService();
             _trayIcon.SettingsRequested += OnSettingsRequested;
             _trayIcon.ExitRequested += OnExitRequested;
+
+            StartOverlay();
+        }
+
+        /// <summary>
+        /// Creates and shows the text overlay. It runs for the lifetime of the app with no
+        /// user-facing toggle; it is torn down by Exit. An empty text list simply renders
+        /// nothing, and the first tick after texts are saved starts showing them.
+        /// </summary>
+        private void StartOverlay()
+        {
+            _overlayViewModel = new OverlayViewModel(_settings);
+            _overlayWindow = new OverlayWindow { DataContext = _overlayViewModel };
+
+            _overlayViewModel.Start();
+            _overlayWindow.Show();
         }
 
         private void OnSettingsRequested(object sender, EventArgs e)
@@ -69,11 +87,16 @@ namespace Subliminal
         private void OnSettingsWindowClosed(object sender, EventArgs e)
         {
             _settingsWindow = null;
+
+            // Apply anything just saved to the overlay straight away instead of waiting
+            // for its next tick.
+            _overlayViewModel?.Refresh();
         }
 
         private void OnExitRequested(object sender, EventArgs e)
         {
             _settingsWindow?.Close();
+            _overlayWindow?.Close();
             _trayIcon.Dispose();
             Shutdown();
         }
