@@ -14,7 +14,10 @@ namespace Subliminal
 
         private void OnPickColorClick(object sender, RoutedEventArgs e)
         {
-            if (!(DataContext is SettingsViewModel viewModel))
+            // Cast rather than 'is T x' pattern matching: that is C# 7 and this project
+            // targets C# 6 so it opens in Visual Studio 2015.
+            var viewModel = DataContext as SettingsViewModel;
+            if (viewModel == null)
             {
                 return;
             }
@@ -47,7 +50,8 @@ namespace Subliminal
         {
             base.OnClosing(e);
 
-            if (DataContext is SettingsViewModel viewModel)
+            var viewModel = DataContext as SettingsViewModel;
+            if (viewModel != null)
             {
                 viewModel.SaveCommand.Execute(null);
             }

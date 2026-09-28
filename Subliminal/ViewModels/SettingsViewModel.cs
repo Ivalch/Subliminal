@@ -1,42 +1,72 @@
-using CommunityToolkit.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.Input;
-using Subliminal.Converters;
-using Subliminal.Services;
 using System;
-using System.Windows;
-using System.Windows.Forms;
+using Subliminal.Converters;
+using Subliminal.Mvvm;
+using Subliminal.Services;
 
 namespace Subliminal.ViewModels
 {
-    public partial class SettingsViewModel : ObservableObject
+    public class SettingsViewModel : ObservableObject
     {
         private readonly AppSettings _settings;
+
+        private bool _startWithWindows;
+        private string _editColorHex;
+        private int _transparency;
+        private int _appearSeconds;
+        private int _showTimeSeconds;
+        private int _fontSize;
+        private string _text;
 
         public SettingsViewModel(AppSettings settings)
         {
             _settings = settings;
+            SaveCommand = new RelayCommand(Save);
         }
 
-        [ObservableProperty]
-        private bool _startWithWindows;
+        public bool StartWithWindows
+        {
+            get { return _startWithWindows; }
+            set { SetProperty(ref _startWithWindows, value); }
+        }
 
-        [ObservableProperty]
-        private string _editColorHex;
+        public string EditColorHex
+        {
+            get { return _editColorHex; }
+            set { SetProperty(ref _editColorHex, value); }
+        }
 
-        [ObservableProperty]
-        private int _transparency;
+        public int Transparency
+        {
+            get { return _transparency; }
+            set { SetProperty(ref _transparency, value); }
+        }
 
-        [ObservableProperty]
-        private int _appearSeconds;
+        public int AppearSeconds
+        {
+            get { return _appearSeconds; }
+            set { SetProperty(ref _appearSeconds, value); }
+        }
 
-        [ObservableProperty]
-        private int _showTimeSeconds;
+        public int ShowTimeSeconds
+        {
+            get { return _showTimeSeconds; }
+            set { SetProperty(ref _showTimeSeconds, value); }
+        }
 
-        [ObservableProperty]
-        private int _fontSize;
+        public int FontSize
+        {
+            get { return _fontSize; }
+            set { SetProperty(ref _fontSize, value); }
+        }
 
-        [ObservableProperty]
-        private string _text;
+        public string Text
+        {
+            get { return _text; }
+            set { SetProperty(ref _text, value); }
+        }
+
+        /// <summary>Invoked by the Settings window when the dialog closes.</summary>
+        public RelayCommand SaveCommand { get; private set; }
 
         /// <summary>Copies persisted values into the editable copies the UI binds to.</summary>
         public void Load()
@@ -62,7 +92,6 @@ namespace Subliminal.ViewModels
             }
         }
 
-        [RelayCommand]
         private void Save()
         {
             // Transparency is bounded in the model too, not just the slider, so a bad
@@ -76,13 +105,16 @@ namespace Subliminal.ViewModels
 
             // Every non-blank line becomes its own stored setting.
             _settings.TextLines = AppSettings.SplitLines(Text);
+
             try
             {
                 _settings.Save();
             }
             catch (Exception ex)
             {
-                System.Windows.MessageBox.Show("Failed to save settings: " + ex.Message, "Save error", 
+                System.Windows.MessageBox.Show(
+                    "Failed to save settings: " + ex.Message,
+                    "Save error",
                     System.Windows.MessageBoxButton.OK);
             }
 
@@ -90,10 +122,12 @@ namespace Subliminal.ViewModels
             {
                 StartupRegistration.SetEnabled(StartWithWindows);
             }
-            catch (System.Exception ex)
+            catch (Exception ex)
             {
                 // Registry writes can be denied by policy; the preference is still stored.
-                System.Windows.MessageBox.Show("Failed to set startup setting: " + ex.Message, "Save error", 
+                System.Windows.MessageBox.Show(
+                    "Failed to set startup setting: " + ex.Message,
+                    "Save error",
                     System.Windows.MessageBoxButton.OK);
             }
         }

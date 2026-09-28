@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Windows.Threading;
-using CommunityToolkit.Mvvm.ComponentModel;
+using Subliminal.Mvvm;
 using Subliminal.Services;
 
 namespace Subliminal.ViewModels
@@ -11,7 +11,7 @@ namespace Subliminal.ViewModels
     /// appear (invisible -> chosen transparency), hold, then fade back out,
     /// at which point a new random line starts the cycle again.
     /// </summary>
-    public partial class OverlayViewModel : ObservableObject
+    public class OverlayViewModel : ObservableObject
     {
         private const double TickMilliseconds = 50;
 
@@ -22,6 +22,14 @@ namespace Subliminal.ViewModels
         private readonly Random _random = new Random();
 
         private List<string> _lines = new List<string>();
+
+        private string _displayText = string.Empty;
+        private int _transparency = 95;
+        private string _colorHex = "#FFFFFF";
+        private int _appearSeconds = 5;
+        private int _showTimeSeconds = 10;
+        private int _fontSize = 52;
+        private double _currentOpacity;
 
         private Phase _phase = Phase.Appear;
         private DateTime _phaseStarted = DateTime.UtcNow;
@@ -35,35 +43,75 @@ namespace Subliminal.ViewModels
         }
 
         /// <summary>Text currently shown in the overlay.</summary>
-        [ObservableProperty]
-        private string _displayText = string.Empty;
+        public string DisplayText
+        {
+            get { return _displayText; }
+            set { SetProperty(ref _displayText, value); }
+        }
 
         /// <summary>Target transparency percentage from settings. 100 is fully invisible.</summary>
-        [ObservableProperty]
-        private int _transparency = 95;
+        public int Transparency
+        {
+            get { return _transparency; }
+            set
+            {
+                if (SetProperty(ref _transparency, value))
+                {
+                    OnPropertyChanged("DesiredOpacity");
+                }
+            }
+        }
 
         /// <summary>Overlay colour as #RRGGBB, taken from settings.</summary>
-        [ObservableProperty]
-        private string _colorHex = "#FFFFFF";
+        public string ColorHex
+        {
+            get { return _colorHex; }
+            set { SetProperty(ref _colorHex, value); }
+        }
 
         /// <summary>Seconds for each of the appear and fade ramps, 1-10.</summary>
-        [ObservableProperty]
-        private int _appearSeconds = 5;
+        public int AppearSeconds
+        {
+            get { return _appearSeconds; }
+            set
+            {
+                if (SetProperty(ref _appearSeconds, value))
+                {
+                    OnPropertyChanged("AppearDuration");
+                }
+            }
+        }
 
-        [ObservableProperty]
-        private int _showTimeSeconds = 10;
+        /// <summary>Seconds a line stays at its chosen transparency, 1-10.</summary>
+        public int ShowTimeSeconds
+        {
+            get { return _showTimeSeconds; }
+            set
+            {
+                if (SetProperty(ref _showTimeSeconds, value))
+                {
+                    OnPropertyChanged("ShowDuration");
+                }
+            }
+        }
 
         /// <summary>Overlay text size in points, taken from settings.</summary>
-        [ObservableProperty]
-        private int _fontSize = 52;
+        public int FontSize
+        {
+            get { return _fontSize; }
+            set { SetProperty(ref _fontSize, value); }
+        }
 
         /// <summary>
         /// Animated 0.0-1.0 opacity the view binds to. 0 means invisible, which is where
         /// each cycle starts. This is driven by the phase timer, not the transparency
         /// setting directly, so the appear/fade ramp can be drawn.
         /// </summary>
-        [ObservableProperty]
-        private double _currentOpacity;
+        public double CurrentOpacity
+        {
+            get { return _currentOpacity; }
+            set { SetProperty(ref _currentOpacity, value); }
+        }
 
         public double AppearDuration { get { return ClampSeconds(AppearSeconds); } }
 
@@ -79,21 +127,6 @@ namespace Subliminal.ViewModels
         public bool HasText
         {
             get { return _lines.Count > 0; }
-        }
-
-        partial void OnAppearSecondsChanged(int value)
-        {
-            OnPropertyChanged(nameof(AppearDuration));
-        }
-
-        partial void OnShowTimeSecondsChanged(int value)
-        {
-            OnPropertyChanged(nameof(ShowDuration));
-        }
-
-        partial void OnTransparencyChanged(int value)
-        {
-            OnPropertyChanged(nameof(DesiredOpacity));
         }
 
         public void Start()
