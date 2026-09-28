@@ -13,15 +13,14 @@
         WindowStartupLocation="Manual">
     <Window.Resources>
         <conv:HexToBrushConverter x:Key="HexToBrush" />
-        <conv:PercentToOpacityConverter x:Key="PercentToOpacity" />
     </Window.Resources>
 
     <!--
-      Opacity applies to the text only; the window background stays fully transparent.
-      PercentToOpacityConverter treats Transparency as a real transparency percentage,
-      so 95 means 95% transparent (5% opaque) and 0 means fully opaque.
+      Opacity is driven by the appear/show/fade cycle in the ViewModel, not by the
+      transparency setting directly, so the ramps can be animated. The window background
+      stays fully transparent; only the text is affected.
     -->
-    <Border Opacity="{Binding Transparency, Converter={StaticResource PercentToOpacity}}">
+    <Border Opacity="{Binding CurrentOpacity}">
         <TextBlock Text="{Binding DisplayText}"
                    Foreground="{Binding ColorHex, Converter={StaticResource HexToBrush}}"
                    FontSize="54"

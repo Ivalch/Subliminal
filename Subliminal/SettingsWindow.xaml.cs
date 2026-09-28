@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using System.Windows;
 using Subliminal.Converters;
 using Subliminal.ViewModels;
@@ -33,20 +34,23 @@ namespace Subliminal
             }
         }
 
-        private void OnSaveClick(object sender, RoutedEventArgs e)
+        /// <summary>
+        /// There are no Save/Cancel buttons, so closing the dialog is what commits the
+        /// settings. Saving here rather than on Closed means the values are already
+        /// written by the time the window is torn down.
+        ///
+        /// The text fields bind with UpdateSourceTrigger=PropertyChanged for this reason:
+        /// with LostFocus, the field the user is currently typing in would not have been
+        /// pushed to the ViewModel yet, so the last edit would be silently lost on close.
+        /// </summary>
+        protected override void OnClosing(CancelEventArgs e)
         {
+            base.OnClosing(e);
+
             if (DataContext is SettingsViewModel viewModel)
             {
                 viewModel.SaveCommand.Execute(null);
             }
-
-            Close();
-        }
-
-        private void OnCloseClick(object sender, RoutedEventArgs e)
-        {
-            // Discards uncommitted edits; the persisted values are untouched.
-            Close();
         }
 
         private void Slider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)

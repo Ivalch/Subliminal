@@ -7,23 +7,30 @@ using Subliminal.Services;
 namespace Subliminal.ViewModels
 {
     /// <summary>
-    /// Drives the always-on-top text overlay: picks a random line from the saved texts
-    /// and swaps it every <see cref="ChangeInterval"/>.
+    /// Drives the always-on-top text overlay with a repeating cycle:
+    /// appear (invisible -> chosen transparency), hold, then fade back out,
+    /// at which point a new random line starts the cycle again.
     /// </summary>
     public partial class OverlayViewModel : ObservableObject
     {
-        public static readonly TimeSpan ChangeInterval = TimeSpan.FromSeconds(10);
+        private const double TickMilliseconds = 50;
+
+        private enum Phase { Appear, Show, Fade }
 
         private readonly AppSettings _settings;
         private readonly DispatcherTimer _timer;
         private readonly Random _random = new Random();
+
         private List<string> _lines = new List<string>();
+
+        private Phase _phase = Phase.Appear;
+        private DateTime _phaseStarted = DateTime.UtcNow;
 
         public OverlayViewModel(AppSettings settings)
         {
             _settings = settings;
 
-            _timer = new DispatcherTimer { Interval = ChangeInterval };
+            _timer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(TickMilliseconds) };
             _timer.Tick += OnTick;
         }
 
@@ -31,27 +38,65 @@ namespace Subliminal.ViewModels
         [ObservableProperty]
         private string _displayText = string.Empty;
 
+        /// <summary>Target transparency percentage from settings. 100 is fully invisible.</summary>
+        [ObservableProperty]
+        private int _transparency = 95;
+
         /// <summary>Overlay colour as #RRGGBB, taken from settings.</summary>
         [ObservableProperty]
         private string _colorHex = "#FFFFFF";
 
+        /// <summary>Seconds for each of the appear and fade ramps, 1-10.</summary>
+        [ObservableProperty]
+        private int _appearSeconds = 5;
+
+        [ObservableProperty]
+        private int _showTimeSeconds = 10;
+
         /// <summary>
-        /// Overlay transparency percentage, taken from settings. 95 means 95% transparent;
-        /// PercentToOpacityConverter turns that into the 0.05 opacity the view uses.
+        /// Animated 0.0-1.0 opacity the view binds to. 0 means invisible, which is where
+        /// each cycle starts. This is driven by the phase timer, not the transparency
+        /// setting directly, so the appear/fade ramp can be drawn.
         /// </summary>
         [ObservableProperty]
-        private int _transparency = 95;
+        private double _currentOpacity;
 
-        /// <summary>False when no texts are saved, so callers can avoid an empty overlay.</summary>
+        public double AppearDuration { get { return ClampSeconds(AppearSeconds); } }
+
+        public double ShowDuration { get { return ClampSeconds(ShowTimeSeconds); } }
+
+        /// <summary>Opacity the line settles at once it has fully appeared.</summary>
+        public double DesiredOpacity
+        {
+            get { return Math.Max(0.0, Math.Min(100.0, 100 - Transparency)) / 100.0; }
+        }
+
+        /// <summary>False when no texts are saved, so the overlay renders nothing.</summary>
         public bool HasText
         {
             get { return _lines.Count > 0; }
+        }
+
+        partial void OnAppearSecondsChanged(int value)
+        {
+            OnPropertyChanged(nameof(AppearDuration));
+        }
+
+        partial void OnShowTimeSecondsChanged(int value)
+        {
+            OnPropertyChanged(nameof(ShowDuration));
+        }
+
+        partial void OnTransparencyChanged(int value)
+        {
+            OnPropertyChanged(nameof(DesiredOpacity));
         }
 
         public void Start()
         {
             Refresh();
             PickRandomLine();
+            BeginPhase(Phase.Appear);
             _timer.Start();
         }
 
@@ -60,12 +105,14 @@ namespace Subliminal.ViewModels
             _timer.Stop();
         }
 
-        /// <summary>Re-reads colour, transparency and texts from the persisted settings.</summary>
+        /// <summary>Re-reads colour, transparency, timings and texts from the settings.</summary>
         public void Refresh()
         {
             _lines = _settings.TextLines ?? new List<string>();
             ColorHex = _settings.EditColorHex;
             Transparency = _settings.Transparency;
+            AppearSeconds = _settings.AppearSeconds;
+            ShowTimeSeconds = _settings.ShowTimeSeconds;
 
             OnPropertyChanged(nameof(HasText));
 
@@ -77,10 +124,54 @@ namespace Subliminal.ViewModels
 
         private void OnTick(object sender, EventArgs e)
         {
-            // Re-reading on every tick means edits saved in Settings show up here with no
-            // extra wiring, at the cost of up to one interval of delay.
-            Refresh();
-            PickRandomLine();
+            var elapsed = (DateTime.UtcNow - _phaseStarted).TotalSeconds;
+
+            switch (_phase)
+            {
+                case Phase.Appear:
+                    // Ramp from invisible up to the chosen transparency.
+                    CurrentOpacity = DesiredOpacity * Eased(Progress(elapsed, AppearDuration));
+                    if (elapsed >= AppearDuration)
+                    {
+                        BeginPhase(Phase.Show);
+                    }
+
+                    break;
+
+                case Phase.Show:
+                    CurrentOpacity = DesiredOpacity;
+                    if (elapsed >= ShowDuration)
+                    {
+                        BeginPhase(Phase.Fade);
+                    }
+
+                    break;
+
+                case Phase.Fade:
+                    // Symmetric with the appear ramp, so the same setting drives both.
+                    CurrentOpacity = DesiredOpacity * (1 - Eased(Progress(elapsed, AppearDuration)));
+                    if (elapsed >= AppearDuration)
+                    {
+                        // The old line is fully invisible by now, so swapping in a new one
+                        // is invisible itself.
+                        PickRandomLine();
+                        BeginPhase(Phase.Appear);
+                    }
+
+                    break;
+            }
+        }
+
+        private void BeginPhase(Phase phase)
+        {
+            _phase = phase;
+            _phaseStarted = DateTime.UtcNow;
+
+            if (phase == Phase.Appear)
+            {
+                // Every cycle starts fully transparent.
+                CurrentOpacity = 0;
+            }
         }
 
         private void PickRandomLine()
@@ -92,6 +183,32 @@ namespace Subliminal.ViewModels
             }
 
             DisplayText = _lines[_random.Next(_lines.Count)];
+        }
+
+        private static double Progress(double elapsed, double duration)
+        {
+            if (duration <= 0)
+            {
+                return 1;
+            }
+
+            return Math.Max(0.0, Math.Min(1.0, elapsed / duration));
+        }
+
+        /// <summary>Smoothstep, so the line eases in and out instead of ramping linearly.</summary>
+        private static double Eased(double t)
+        {
+            return t * t * (3 - (2 * t));
+        }
+
+        private static double ClampSeconds(int value)
+        {
+            if (value < 1)
+            {
+                return 1;
+            }
+
+            return value > 10 ? 10 : value;
         }
     }
 }

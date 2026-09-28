@@ -27,9 +27,17 @@ namespace Subliminal.Services
         [DataMember]
         public string EditColorHex { get; set; } = "#60A5FA";
 
-        /// <summary>Overlay opacity as a percentage, 0-100.</summary>
+        /// <summary>Overlay transparency as a percentage, 0-100. 100 is fully invisible.</summary>
         [DataMember]
         public int Transparency { get; set; } = 95;
+
+        /// <summary>Seconds spent fading a line in and out, 1-10.</summary>
+        [DataMember]
+        public int AppearSeconds { get; set; } = 5;
+
+        /// <summary>Seconds a line stays at its chosen transparency, 1-10.</summary>
+        [DataMember]
+        public int ShowTimeSeconds { get; set; } = 10;
 
         /// <summary>
         /// One stored string per line typed in the Settings text editor, so each line is an
@@ -158,7 +166,22 @@ namespace Subliminal.Services
                 settings.Transparency = 100;
             }
 
+            // A hand-edited file can hold out-of-range phase durations; keep them legal.
+            settings.AppearSeconds = ClampSeconds(settings.AppearSeconds);
+            settings.ShowTimeSeconds = ClampSeconds(settings.ShowTimeSeconds);
+
             return settings;
+        }
+
+        /// <summary>Keeps a phase duration inside the 1-10 second range the UI allows.</summary>
+        private static int ClampSeconds(int value)
+        {
+            if (value < 1)
+            {
+                return 1;
+            }
+
+            return value > 10 ? 10 : value;
         }
     }
 }

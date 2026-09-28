@@ -8,121 +8,326 @@
         SizeToContent="Height"
         ResizeMode="NoResize"
         ShowInTaskbar="False"
-        WindowStartupLocation="CenterScreen">
+        WindowStartupLocation="CenterScreen"
+        TextOptions.TextFormattingMode="Display"
+        UseLayoutRounding="True"
+        SnapsToDevicePixels="True">
     <Window.Resources>
         <conv:HexToBrushConverter x:Key="HexToBrush" />
         <conv:PercentToOpacityConverter x:Key="PercentToOpacity" />
+
+        <!-- Small caption that introduces each block of settings. -->
+        <Style x:Key="SectionLabel" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="11" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Foreground" Value="#6B7280" />
+            <Setter Property="Margin" Value="0,0,0,8" />
+        </Style>
+
+        <Style x:Key="FieldLabel" TargetType="TextBlock">
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="Margin" Value="0,0,10,0" />
+        </Style>
+
+        <Style x:Key="UnitLabel" TargetType="TextBlock">
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="Foreground" Value="#9CA3AF" />
+        </Style>
+
+        <Style x:Key="FieldTextBox" TargetType="TextBox">
+            <Setter Property="Padding" Value="7,4" />
+            <Setter Property="Background" Value="#FFFFFF" />
+            <Setter Property="BorderBrush" Value="#D1D5DB" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Foreground" Value="#111827" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="TextBox">
+                        <Border x:Name="Bd"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="5"
+                                SnapsToDevicePixels="True">
+                            <ScrollViewer x:Name="PART_ContentHost"
+                                          Margin="{TemplateBinding Padding}"
+                                          Focusable="False"
+                                          HorizontalScrollBarVisibility="{TemplateBinding HorizontalScrollBarVisibility}"
+                                          VerticalScrollBarVisibility="{TemplateBinding VerticalScrollBarVisibility}" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="BorderBrush" Value="#9CA3AF" />
+                            </Trigger>
+                            <Trigger Property="IsKeyboardFocusWithin" Value="True">
+                                <Setter TargetName="Bd" Property="BorderBrush" Value="#3B82F6" />
+                            </Trigger>
+                            <Trigger Property="IsReadOnly" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="#F3F4F6" />
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="Bd" Property="Background" Value="#F3F4F6" />
+                                <Setter Property="Foreground" Value="#9CA3AF" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="SecondaryButton" TargetType="Button">
+            <Setter Property="Padding" Value="18,7" />
+            <Setter Property="MinWidth" Value="92" />
+            <Setter Property="Background" Value="#FFFFFF" />
+            <Setter Property="Foreground" Value="#374151" />
+            <Setter Property="BorderBrush" Value="#D1D5DB" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Bd"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="5"
+                                SnapsToDevicePixels="True">
+                            <ContentPresenter HorizontalAlignment="Center"
+                                              VerticalAlignment="Center"
+                                              Margin="{TemplateBinding Padding}"
+                                              RecognizesAccessKey="True" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="#F3F4F6" />
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="#E5E7EB" />
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Opacity" Value="0.45" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="FlatSlider" TargetType="Slider">
+            <Setter Property="Height" Value="18" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Slider">
+                        <Grid VerticalAlignment="Center">
+                            <Border Height="4"
+                                    CornerRadius="2"
+                                    Background="#E5E7EB" />
+                            <Track x:Name="PART_Track">
+                                <Track.DecreaseRepeatButton>
+                                    <RepeatButton Command="Slider.DecreaseLarge"
+                                                  Focusable="False"
+                                                  IsTabStop="False">
+                                        <RepeatButton.Template>
+                                            <ControlTemplate TargetType="RepeatButton">
+                                                <Border Height="4"
+                                                        CornerRadius="2"
+                                                        Background="#3B82F6"
+                                                        VerticalAlignment="Center" />
+                                            </ControlTemplate>
+                                        </RepeatButton.Template>
+                                    </RepeatButton>
+                                </Track.DecreaseRepeatButton>
+                                <Track.Thumb>
+                                    <Thumb>
+                                        <Thumb.Template>
+                                            <ControlTemplate TargetType="Thumb">
+                                                <Ellipse Width="14"
+                                                         Height="14"
+                                                         Fill="#3B82F6"
+                                                         Stroke="#FFFFFF"
+                                                         StrokeThickness="2" />
+                                            </ControlTemplate>
+                                        </Thumb.Template>
+                                    </Thumb>
+                                </Track.Thumb>
+                                <Track.IncreaseRepeatButton>
+                                    <RepeatButton Command="Slider.IncreaseLarge"
+                                                  Focusable="False"
+                                                  IsTabStop="False">
+                                        <RepeatButton.Template>
+                                            <!-- Must be overridden: with a custom slider
+                                                 template the default RepeatButton chrome would
+                                                 otherwise be drawn as a visible button. -->
+                                            <ControlTemplate TargetType="RepeatButton">
+                                                <Border Background="Transparent" />
+                                            </ControlTemplate>
+                                        </RepeatButton.Template>
+                                    </RepeatButton>
+                                </Track.IncreaseRepeatButton>
+                            </Track>
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
     </Window.Resources>
 
-    <StackPanel Margin="16">
+    <StackPanel Margin="18,16,18,16">
+        <!-- Startup -->
+        <TextBlock Text="Startup" Style="{StaticResource SectionLabel}" />
         <CheckBox Content="Start with Windows"
                   IsChecked="{Binding StartWithWindows}"
-                  Margin="0,4" />
+                  Margin="0,0,0,2" />
 
-        <Separator Margin="0,12" />
+        <!-- Timing: Appear and Show time share one line -->
+        <TextBlock Text="Timing"
+                   Style="{StaticResource SectionLabel}"
+                   Margin="0,20,0,8" />
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <TextBlock Grid.Column="0"
+                       Text="Appear"
+                       Style="{StaticResource FieldLabel}"
+                       ToolTip="Time taken to fade in and to fade out. 1-10 seconds." />
+            <TextBox Grid.Column="1"
+                     Width="52"
+                     Style="{StaticResource FieldTextBox}"
+                     TextAlignment="Right"
+                     VerticalAlignment="Center"
+                     HorizontalScrollBarVisibility="Hidden"
+                     VerticalScrollBarVisibility="Hidden"
+                     Text="{Binding AppearSeconds, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}" />
+            <TextBlock Grid.Column="2"
+                       Text="s"
+                       Margin="6,0,0,0"
+                       Style="{StaticResource UnitLabel}" />
+            <TextBlock Grid.Column="4"
+                       Text="Show time"
+                       Style="{StaticResource FieldLabel}"
+                       ToolTip="Time the text stays visible. 1-10 seconds." />
+            <TextBox Grid.Column="5"
+                     Width="52"
+                     Style="{StaticResource FieldTextBox}"
+                     TextAlignment="Right"
+                     VerticalAlignment="Center"
+                     HorizontalScrollBarVisibility="Hidden"
+                     VerticalScrollBarVisibility="Hidden"
+                     Text="{Binding ShowTimeSeconds, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}" />
+            <TextBlock Grid.Column="6"
+                       Text="s"
+                       Margin="6,0,0,0"
+                       Style="{StaticResource UnitLabel}" />
+        </Grid>
 
-        <GroupBox Header="" Padding="12">
-            <StackPanel>
-                <!-- Edit color -->
-                <Grid Margin="0,4">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="Auto" />
-                    </Grid.ColumnDefinitions>
-                    <TextBlock Grid.Column="0"
-                               Text="Edit color"
-                               VerticalAlignment="Center"
-                               Margin="0,0,8,0" />
-                    <Border Grid.Column="1"
-                            Height="24"
-                            Margin="0,0,8,0"
-                            CornerRadius="3"
-                            VerticalAlignment="Center"
-                            BorderBrush="#6B7280"
-                            BorderThickness="1"
-                            Background="{Binding EditColorHex, Converter={StaticResource HexToBrush}}"
-                            Opacity="100" />
-                    <TextBox Grid.Column="2"
-                             Width="84"
-                             Margin="0,0,8,0"
-                             VerticalAlignment="Center"
-                             Text="{Binding EditColorHex, UpdateSourceTrigger=PropertyChanged}"
-                             IsReadOnly="True"/>
-                    <Button Grid.Column="3"
-                            Content="Pick..."
-                            Padding="10,3"
-                            VerticalAlignment="Center"
-                            Click="OnPickColorClick" />
-                </Grid>
+        <!-- Appearance -->
+        <TextBlock Text="Appearance"
+                   Style="{StaticResource SectionLabel}"
+                   Margin="0,20,0,8" />
 
-                <!-- Transparency -->
-                <Grid Margin="0,8">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="Auto" />
-                    </Grid.ColumnDefinitions>
-                    <TextBlock Grid.Column="0"
-                               Text="Transparency"
-                               VerticalAlignment="Center"
-                               Margin="0,0,8,0" />
-                    <Slider Grid.Column="1"
-                            Minimum="0"
-                            Maximum="100"
-                            TickFrequency="1"
-                            IsSnapToTickEnabled="True"
-                            VerticalAlignment="Center"
-                            Value="{Binding Transparency, Mode=TwoWay}" ValueChanged="Slider_ValueChanged" />
-                    <TextBlock Grid.Column="2"
-                               MinWidth="42"
-                               Margin="8,0,0,0"
-                               VerticalAlignment="Center"
-                               TextAlignment="Right"
-                               Text="{Binding Transparency, StringFormat={}{0}%}" />
-                </Grid>
+        <!-- Edit color -->
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="92" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <TextBlock Grid.Column="0"
+                       Text="Edit color"
+                       Style="{StaticResource FieldLabel}" />
+            <Border Grid.Column="1"
+                    Width="40"
+                    Height="24"
+                    Margin="0,0,10,0"
+                    CornerRadius="5"
+                    HorizontalAlignment="Left"
+                    VerticalAlignment="Center"
+                    BorderBrush="#D1D5DB"
+                    BorderThickness="1"
+                    Background="{Binding EditColorHex, Converter={StaticResource HexToBrush}}"
+                    Opacity="100" />
+            <TextBox Grid.Column="2"
+                     Width="86"
+                     Margin="0,0,8,0"
+                     VerticalAlignment="Center"
+                     HorizontalScrollBarVisibility="Hidden"
+                     VerticalScrollBarVisibility="Hidden"
+                     IsReadOnly="True"
+                     Foreground="#6B7280"
+                     Style="{StaticResource FieldTextBox}"
+                     Text="{Binding EditColorHex, UpdateSourceTrigger=PropertyChanged}" />
+            <Button Grid.Column="3"
+                    Content="Pick..."
+                    Padding="14,6"
+                    VerticalAlignment="Center"
+                    Style="{StaticResource SecondaryButton}"
+                    Click="OnPickColorClick" />
+        </Grid>
 
-                <!-- Text -->
-                <!--
-                  A Grid with a star column is used deliberately: the caption sits above the
-                  field, and a * column constrains the TextBox to the available width. Inside a
-                  vertical StackPanel a NoWrap TextBox reports its full text width, which
-                  inflates the whole content block and overflows the window.
-                -->
-                <Grid Margin="0,8">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*" />
-                    </Grid.ColumnDefinitions>
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="Auto" />
-                    </Grid.RowDefinitions>
-                    <TextBlock Grid.Row="0"
-                               Text="Text"
-                               Margin="0,0,0,4" />
-                    <TextBox Grid.Row="1"
-                             Height="120"
-                             AcceptsReturn="True"
-                             TextWrapping="NoWrap"
-                             VerticalScrollBarVisibility="Auto"
-                             HorizontalScrollBarVisibility="Auto"
-                             Text="{Binding Text, UpdateSourceTrigger=PropertyChanged}" />
-                </Grid>
-            </StackPanel>
-        </GroupBox>
+        <!-- Transparency -->
+        <Grid Margin="0,12,0,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="92" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <TextBlock Grid.Column="0"
+                       Text="Transparency"
+                       Style="{StaticResource FieldLabel}" />
+            <Slider Grid.Column="1"
+                    Style="{StaticResource FlatSlider}"
+                    Minimum="0"
+                    Maximum="100"
+                    TickFrequency="1"
+                    IsSnapToTickEnabled="True"
+                    VerticalAlignment="Center"
+                    Value="{Binding Transparency, Mode=TwoWay}"
+                    ValueChanged="Slider_ValueChanged" />
+            <TextBlock Grid.Column="2"
+                       MinWidth="46"
+                       Margin="12,0,0,0"
+                       VerticalAlignment="Center"
+                       TextAlignment="Right"
+                       Foreground="#374151"
+                       Text="{Binding Transparency, StringFormat={}{0}%}" />
+        </Grid>
 
-        <StackPanel Orientation="Horizontal"
-                    HorizontalAlignment="Right"
-                    Margin="0,16,0,0">
-            <Button Content="Close"
-                    Width="88"
-                    Margin="0,0,8,0"
-                    Click="OnCloseClick" />
-            <Button Content="Save"
-                    Width="88"
-                    IsDefault="True"
-                    Click="OnSaveClick" />
-        </StackPanel>
+        <!-- Text -->
+        <!--
+              A Grid with a star column is used deliberately: the caption sits above the
+              field, and a * column constrains the TextBox to the available width. Inside a
+              vertical StackPanel a NoWrap TextBox reports its full text width, which
+              inflates the whole content block and overflows the window.
+            -->
+        <Grid Margin="0,12,0,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+            <TextBlock Grid.Row="0"
+                       Text="Text"
+                       Style="{StaticResource SectionLabel}"
+                       Margin="0,0,0,6" />
+            <TextBox Grid.Row="1"
+                     Height="120"
+                     Style="{StaticResource FieldTextBox}"
+                     AcceptsReturn="True"
+                     TextWrapping="NoWrap"
+                     VerticalScrollBarVisibility="Auto"
+                     HorizontalScrollBarVisibility="Auto"
+                     Text="{Binding Text, UpdateSourceTrigger=PropertyChanged}" />
+        </Grid>
     </StackPanel>
 </Window>

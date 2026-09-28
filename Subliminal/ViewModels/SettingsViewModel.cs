@@ -27,6 +27,12 @@ namespace Subliminal.ViewModels
         private int _transparency;
 
         [ObservableProperty]
+        private int _appearSeconds;
+
+        [ObservableProperty]
+        private int _showTimeSeconds;
+
+        [ObservableProperty]
         private string _text;
 
         /// <summary>Copies persisted values into the editable copies the UI binds to.</summary>
@@ -35,6 +41,8 @@ namespace Subliminal.ViewModels
             StartWithWindows = _settings.StartWithWindows;
             EditColorHex = _settings.EditColorHex;
             Transparency = _settings.Transparency;
+            AppearSeconds = _settings.AppearSeconds;
+            ShowTimeSeconds = _settings.ShowTimeSeconds;
 
             // Stored one string per line; the editor shows them as a single block.
             Text = AppSettings.JoinLines(_settings.TextLines);
@@ -58,6 +66,8 @@ namespace Subliminal.ViewModels
             _settings.StartWithWindows = StartWithWindows;
             _settings.EditColorHex = EditColorHex;
             _settings.Transparency = Transparency < 0 ? 0 : (Transparency > 100 ? 100 : Transparency);
+            _settings.AppearSeconds = ClampSeconds(AppearSeconds);
+            _settings.ShowTimeSeconds = ClampSeconds(ShowTimeSeconds);
 
             // Every non-blank line becomes its own stored setting.
             _settings.TextLines = AppSettings.SplitLines(Text);
@@ -81,6 +91,17 @@ namespace Subliminal.ViewModels
                 System.Windows.MessageBox.Show("Failed to set startup setting: " + ex.Message, "Save error", 
                     System.Windows.MessageBoxButton.OK);
             }
+        }
+
+        /// <summary>Keeps a phase duration inside the 1-10 second range the sliders allow.</summary>
+        private static int ClampSeconds(int value)
+        {
+            if (value < 1)
+            {
+                return 1;
+            }
+
+            return value > 10 ? 10 : value;
         }
     }
 }
