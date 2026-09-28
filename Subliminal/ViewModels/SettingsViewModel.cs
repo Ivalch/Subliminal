@@ -33,6 +33,9 @@ namespace Subliminal.ViewModels
         private int _showTimeSeconds;
 
         [ObservableProperty]
+        private int _fontSize;
+
+        [ObservableProperty]
         private string _text;
 
         /// <summary>Copies persisted values into the editable copies the UI binds to.</summary>
@@ -43,6 +46,7 @@ namespace Subliminal.ViewModels
             Transparency = _settings.Transparency;
             AppearSeconds = _settings.AppearSeconds;
             ShowTimeSeconds = _settings.ShowTimeSeconds;
+            FontSize = _settings.FontSize;
 
             // Stored one string per line; the editor shows them as a single block.
             Text = AppSettings.JoinLines(_settings.TextLines);
@@ -68,6 +72,7 @@ namespace Subliminal.ViewModels
             _settings.Transparency = Transparency < 0 ? 0 : (Transparency > 100 ? 100 : Transparency);
             _settings.AppearSeconds = ClampSeconds(AppearSeconds);
             _settings.ShowTimeSeconds = ClampSeconds(ShowTimeSeconds);
+            _settings.FontSize = AppSettings.SnapFontSize(FontSize);
 
             // Every non-blank line becomes its own stored setting.
             _settings.TextLines = AppSettings.SplitLines(Text);

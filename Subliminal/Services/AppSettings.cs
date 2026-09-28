@@ -12,6 +12,34 @@ namespace Subliminal.Services
     [DataContract]
     public class AppSettings
     {
+        /// <summary>
+        /// The only font sizes offered for the overlay. Kept here so the Settings drop-down
+        /// and the model validation cannot drift apart.
+        /// </summary>
+        public static readonly int[] AllowedFontSizes =
+        {
+            16, 18, 22, 26, 32, 44, 52, 64, 72, 80, 90, 100
+        };
+
+        /// <summary>Snaps an arbitrary value to the closest allowed font size.</summary>
+        public static int SnapFontSize(int value)
+        {
+            var best = AllowedFontSizes[0];
+            var bestDistance = Math.Abs(value - best);
+
+            foreach (var candidate in AllowedFontSizes)
+            {
+                var distance = Math.Abs(value - candidate);
+                if (distance < bestDistance)
+                {
+                    best = candidate;
+                    bestDistance = distance;
+                }
+            }
+
+            return best;
+        }
+
         private static readonly string SettingsPath = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
             "Subliminal",
@@ -38,6 +66,13 @@ namespace Subliminal.Services
         /// <summary>Seconds a line stays at its chosen transparency, 1-10.</summary>
         [DataMember]
         public int ShowTimeSeconds { get; set; } = 10;
+
+        /// <summary>
+        /// Overlay text size. Must be one of <see cref="AllowedFontSizes"/>; a hand-edited
+        /// file with any other value is snapped to the nearest one on load.
+        /// </summary>
+        [DataMember]
+        public int FontSize { get; set; } = 52;
 
         /// <summary>
         /// One stored string per line typed in the Settings text editor, so each line is an
@@ -169,6 +204,9 @@ namespace Subliminal.Services
             // A hand-edited file can hold out-of-range phase durations; keep them legal.
             settings.AppearSeconds = ClampSeconds(settings.AppearSeconds);
             settings.ShowTimeSeconds = ClampSeconds(settings.ShowTimeSeconds);
+
+            // Keep the drop-down consistent with what the overlay will actually use.
+            settings.FontSize = SnapFontSize(settings.FontSize);
 
             return settings;
         }

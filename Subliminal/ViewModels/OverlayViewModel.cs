@@ -53,6 +53,10 @@ namespace Subliminal.ViewModels
         [ObservableProperty]
         private int _showTimeSeconds = 10;
 
+        /// <summary>Overlay text size in points, taken from settings.</summary>
+        [ObservableProperty]
+        private int _fontSize = 52;
+
         /// <summary>
         /// Animated 0.0-1.0 opacity the view binds to. 0 means invisible, which is where
         /// each cycle starts. This is driven by the phase timer, not the transparency
@@ -113,6 +117,7 @@ namespace Subliminal.ViewModels
             Transparency = _settings.Transparency;
             AppearSeconds = _settings.AppearSeconds;
             ShowTimeSeconds = _settings.ShowTimeSeconds;
+            FontSize = _settings.FontSize;
 
             OnPropertyChanged(nameof(HasText));
 

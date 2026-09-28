@@ -2,6 +2,7 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:conv="clr-namespace:Subliminal.Converters"
+        xmlns:svc="clr-namespace:Subliminal.Services;assembly=Subliminal"
         Title="Subliminal Settings"
         Icon="pack://application:,,,/Subliminal.ico"
         Width="440"
@@ -158,6 +159,83 @@
                                     </RepeatButton>
                                 </Track.IncreaseRepeatButton>
                             </Track>
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Rounded drop-down so the combo matches the rest of the fields. -->
+        <Style x:Key="FieldComboBox" TargetType="ComboBox">
+            <Setter Property="Padding" Value="7,4" />
+            <Setter Property="Foreground" Value="#111827" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ComboBox">
+                        <Grid>
+                            <ToggleButton x:Name="ToggleButton"
+                                          Focusable="False"
+                                          ClickMode="Press"
+                                          Cursor="Hand"
+                                          IsChecked="{Binding IsDropDownOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}">
+                                <ToggleButton.Template>
+                                    <ControlTemplate TargetType="ToggleButton">
+                                        <Border x:Name="Bd"
+                                                Background="#FFFFFF"
+                                                BorderBrush="#D1D5DB"
+                                                BorderThickness="1"
+                                                CornerRadius="5"
+                                                SnapsToDevicePixels="True">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*" />
+                                                    <ColumnDefinition Width="Auto" />
+                                                </Grid.ColumnDefinitions>
+                                                <ContentPresenter Grid.Column="0"
+                                                                  Margin="{TemplateBinding Padding}"
+                                                                  HorizontalAlignment="Left"
+                                                                  VerticalAlignment="Center"
+                                                                  Content="{Binding SelectionBoxItem, RelativeSource={RelativeSource AncestorType=ComboBox}}"
+                                                                  ContentTemplate="{Binding SelectionBoxItemTemplate, RelativeSource={RelativeSource AncestorType=ComboBox}}" />
+                                                <Path Grid.Column="1"
+                                                      Margin="0,0,9,0"
+                                                      HorizontalAlignment="Center"
+                                                      VerticalAlignment="Center"
+                                                      Data="M 0 0 L 4 4 L 8 0"
+                                                      Stroke="#9CA3AF"
+                                                      StrokeThickness="1.5"
+                                                      StrokeEndLineCap="Round"
+                                                      StrokeStartLineCap="Round" />
+                                            </Grid>
+                                        </Border>
+                                        <ControlTemplate.Triggers>
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter TargetName="Bd" Property="BorderBrush" Value="#9CA3AF" />
+                                            </Trigger>
+                                            <Trigger Property="IsChecked" Value="True">
+                                                <Setter TargetName="Bd" Property="BorderBrush" Value="#3B82F6" />
+                                            </Trigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </ToggleButton.Template>
+                            </ToggleButton>
+                            <Popup x:Name="Popup"
+                                   AllowsTransparency="True"
+                                   Focusable="False"
+                                   IsOpen="{TemplateBinding IsDropDownOpen}"
+                                   Placement="Bottom">
+                                <Border Margin="0,3,0,0"
+                                        Padding="0,4"
+                                        MinWidth="{Binding ActualWidth, ElementName=ToggleButton}"
+                                        Background="#FFFFFF"
+                                        BorderBrush="#D1D5DB"
+                                        BorderThickness="1"
+                                        CornerRadius="5">
+                                    <ScrollViewer MaxHeight="220">
+                                        <ItemsPresenter />
+                                    </ScrollViewer>
+                                </Border>
+                            </Popup>
                         </Grid>
                     </ControlTemplate>
                 </Setter.Value>
@@ -350,6 +428,25 @@
                        TextAlignment="Right"
                        Foreground="#374151"
                        Text="{Binding Transparency, StringFormat={}{0}%}" />
+        </Grid>
+
+        <!-- Size -->
+        <Grid Margin="0,12,0,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="92" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <TextBlock Grid.Column="0"
+                       Text="Size"
+                       Style="{StaticResource FieldLabel}"
+                       ToolTip="Overlay text size." />
+            <ComboBox Grid.Column="1"
+                      HorizontalAlignment="Left"
+                      Width="120"
+                      VerticalAlignment="Center"
+                      Style="{StaticResource FieldComboBox}"
+                      ItemsSource="{x:Static svc:AppSettings.AllowedFontSizes}"
+                      SelectedItem="{Binding FontSize, Mode=TwoWay}" />
         </Grid>
 
         <!-- Text -->

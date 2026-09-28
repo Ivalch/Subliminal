@@ -24,7 +24,7 @@
     <Border Opacity="{Binding CurrentOpacity}">
         <TextBlock Text="{Binding DisplayText}"
                    Foreground="{Binding ColorHex, Converter={StaticResource HexToBrush}}"
-                   FontSize="54"
+                   FontSize="{Binding FontSize}"
                    FontWeight="SemiBold"
                    TextWrapping="Wrap"
                    TextAlignment="Center"
