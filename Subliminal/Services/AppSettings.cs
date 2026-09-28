@@ -111,31 +111,25 @@ namespace Subliminal.Services
 
         public void Save()
         {
-            try
+            var directory = Path.GetDirectoryName(SettingsPath);
+            if (!string.IsNullOrEmpty(directory))
             {
-                var directory = Path.GetDirectoryName(SettingsPath);
-                if (!string.IsNullOrEmpty(directory))
-                {
-                    Directory.CreateDirectory(directory);
-                }
-
-                if (TextLines == null)
-                {
-                    TextLines = new List<string>();
-                }
-
-                // File.Create writes a raw stream with no byte-order mark. The serializer
-                // throws when it reads a BOM, which would make every load fall back to
-                // defaults and silently discard the saved settings.
-                using (var stream = File.Create(SettingsPath))
-                {
-                    Serializer.WriteObject(stream, this);
-                }
+                Directory.CreateDirectory(directory);
             }
-            catch (Exception ex)
+
+            if (TextLines == null)
             {
-                System.Diagnostics.Debug.WriteLine("Failed to save settings: " + ex.Message);
+                TextLines = new List<string>();
             }
+
+            // File.Create writes a raw stream with no byte-order mark. The serializer
+            // throws when it reads a BOM, which would make every load fall back to
+            // defaults and silently discard the saved settings.
+            using (var stream = File.Create(SettingsPath))
+            {
+                Serializer.WriteObject(stream, this);
+            }
+
         }
 
         /// <summary>

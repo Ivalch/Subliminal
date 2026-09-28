@@ -2,6 +2,9 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Subliminal.Converters;
 using Subliminal.Services;
+using System;
+using System.Windows;
+using System.Windows.Forms;
 
 namespace Subliminal.ViewModels
 {
@@ -58,7 +61,15 @@ namespace Subliminal.ViewModels
 
             // Every non-blank line becomes its own stored setting.
             _settings.TextLines = AppSettings.SplitLines(Text);
-            _settings.Save();
+            try
+            {
+                _settings.Save();
+            }
+            catch (Exception ex)
+            {
+                System.Windows.MessageBox.Show("Failed to save settings: " + ex.Message, "Save error", 
+                    System.Windows.MessageBoxButton.OK);
+            }
 
             try
             {
@@ -67,7 +78,8 @@ namespace Subliminal.ViewModels
             catch (System.Exception ex)
             {
                 // Registry writes can be denied by policy; the preference is still stored.
-                System.Diagnostics.Debug.WriteLine("Failed to update startup registration: " + ex.Message);
+                System.Windows.MessageBox.Show("Failed to set startup setting: " + ex.Message, "Save error", 
+                    System.Windows.MessageBoxButton.OK);
             }
         }
     }

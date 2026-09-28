@@ -43,11 +43,10 @@ namespace Subliminal
 
                 _settingsWindow.Closed += OnSettingsWindowClosed;
             }
-            else
-            {
-                // Re-read so reopening shows current values rather than stale edits.
-                ((SettingsViewModel)_settingsWindow.DataContext).Load();
-            }
+
+            // Always refresh from the model. A newly created ViewModel starts empty, so
+            // this has to run on every open, not only when reusing an existing window.
+            ((SettingsViewModel)_settingsWindow.DataContext).Load();
 
             if (_settingsWindow.IsVisible)
             {
