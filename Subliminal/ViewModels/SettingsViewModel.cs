@@ -32,7 +32,9 @@ namespace Subliminal.ViewModels
             StartWithWindows = _settings.StartWithWindows;
             EditColorHex = _settings.EditColorHex;
             Transparency = _settings.Transparency;
-            Text = _settings.Text;
+
+            // Stored one string per line; the editor shows them as a single block.
+            Text = AppSettings.JoinLines(_settings.TextLines);
         }
 
         /// <summary>Current colour for the colour picker. Falls back to the default if unparseable.</summary>
@@ -53,7 +55,9 @@ namespace Subliminal.ViewModels
             _settings.StartWithWindows = StartWithWindows;
             _settings.EditColorHex = EditColorHex;
             _settings.Transparency = Transparency < 0 ? 0 : (Transparency > 100 ? 100 : Transparency);
-            _settings.Text = Text ?? string.Empty;
+
+            // Every non-blank line becomes its own stored setting.
+            _settings.TextLines = AppSettings.SplitLines(Text);
             _settings.Save();
 
             try
