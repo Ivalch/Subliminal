@@ -25,12 +25,18 @@ namespace Subliminal
         {
             InitializeComponent();
 
-            // A fixed size is deliberate. With SizeToContent the window would resize and
-            // re-centre every time the displayed line changed, which makes the overlay
-            // visibly jump around.
+            // The window sizes itself to the text (SizeToContent) so a message that wraps
+            // to several lines is never cropped. These caps keep a very long message from
+            // growing the window past the usable screen area.
             var area = SystemParameters.WorkArea;
-            Width = area.Width * 0.7;
-            Height = area.Height * 0.25;
+            MaxWidth = area.Width * 0.8;
+            MaxHeight = area.Height * 0.7;
+
+            // Each new line can change the size, so re-centre to keep the text in the
+            // middle of the screen. This is not visible in practice: the ViewModel swaps
+            // the line at the start of the appear phase, when the text is fully
+            // transparent. Moving the window does not change its size, so this cannot loop.
+            SizeChanged += (sender, e) => CenterOnWorkArea();
         }
 
         protected override void OnContentRendered(EventArgs e)
@@ -39,6 +45,11 @@ namespace Subliminal
 
             // Centred here rather than via WindowStartupLocation, because the actual size
             // is only known once the window has been laid out.
+            CenterOnWorkArea();
+        }
+
+        private void CenterOnWorkArea()
+        {
             var area = SystemParameters.WorkArea;
             Left = area.Left + (area.Width - ActualWidth) / 2;
             Top = area.Top + (area.Height - ActualHeight) / 2;

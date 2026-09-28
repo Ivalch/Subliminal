@@ -10,6 +10,7 @@
         ShowInTaskbar="False"
         ShowActivated="False"
         ResizeMode="NoResize"
+        SizeToContent="WidthAndHeight"
         WindowStartupLocation="Manual">
     <Window.Resources>
         <conv:HexToBrushConverter x:Key="HexToBrush" />
