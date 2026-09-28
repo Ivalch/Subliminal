@@ -1,24 +1,111 @@
 <Window x:Class="Subliminal.SettingsWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:conv="clr-namespace:Subliminal.Converters"
         Title="Subliminal Settings"
         Icon="pack://application:,,,/Subliminal.ico"
-        Width="380"
+        Width="440"
         SizeToContent="Height"
         ResizeMode="NoResize"
         ShowInTaskbar="False"
         WindowStartupLocation="CenterScreen">
+    <Window.Resources>
+        <conv:HexToBrushConverter x:Key="HexToBrush" />
+        <conv:PercentToOpacityConverter x:Key="PercentToOpacity" />
+    </Window.Resources>
+
     <StackPanel Margin="16">
         <CheckBox Content="Start with Windows"
                   IsChecked="{Binding StartWithWindows}"
                   Margin="0,4" />
-        <CheckBox Content="Show tray notifications"
-                  IsChecked="{Binding ShowTrayNotifications}"
-                  Margin="0,4" />
 
         <Separator Margin="0,12" />
 
-        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+        <GroupBox Header="Color" Padding="12">
+            <StackPanel>
+                <!-- Edit color -->
+                <Grid Margin="0,4">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Grid.Column="0"
+                               Text="Edit color"
+                               VerticalAlignment="Center"
+                               Margin="0,0,8,0" />
+                    <Border Grid.Column="1"
+                            Height="24"
+                            Margin="0,0,8,0"
+                            CornerRadius="3"
+                            VerticalAlignment="Center"
+                            BorderBrush="#6B7280"
+                            BorderThickness="1"
+                            Background="{Binding EditColorHex, Converter={StaticResource HexToBrush}}"
+                            Opacity="{Binding Transparency, Converter={StaticResource PercentToOpacity}}" />
+                    <TextBox Grid.Column="2"
+                             Width="84"
+                             Margin="0,0,8,0"
+                             VerticalAlignment="Center"
+                             Text="{Binding EditColorHex, UpdateSourceTrigger=PropertyChanged}" />
+                    <Button Grid.Column="3"
+                            Content="Pick..."
+                            Padding="10,3"
+                            VerticalAlignment="Center"
+                            Click="OnPickColorClick" />
+                </Grid>
+
+                <!-- Transparency -->
+                <Grid Margin="0,8">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Grid.Column="0"
+                               Text="Transparency"
+                               VerticalAlignment="Center"
+                               Margin="0,0,8,0" />
+                    <Slider Grid.Column="1"
+                            Minimum="0"
+                            Maximum="100"
+                            TickFrequency="5"
+                            IsSnapToTickEnabled="True"
+                            VerticalAlignment="Center"
+                            Value="{Binding Transparency, Mode=TwoWay}" ValueChanged="Slider_ValueChanged" />
+                    <TextBlock Grid.Column="2"
+                               MinWidth="42"
+                               Margin="8,0,0,0"
+                               VerticalAlignment="Center"
+                               TextAlignment="Right"
+                               Text="{Binding Transparency, StringFormat={}{0}%}" />
+                </Grid>
+
+                <!-- Text -->
+                <Grid Margin="0,8">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Grid.Column="0"
+                               Text="Text"
+                               VerticalAlignment="Top"
+                               Margin="0,2,8,0" />
+                    <TextBox Grid.Column="1"
+                             Height="120"
+                             AcceptsReturn="True"
+                             TextWrapping="Wrap"
+                             VerticalScrollBarVisibility="Auto"
+                             HorizontalScrollBarVisibility="Auto"
+                             Text="{Binding Text, UpdateSourceTrigger=PropertyChanged}" />
+                </Grid>
+            </StackPanel>
+        </GroupBox>
+
+        <StackPanel Orientation="Horizontal"
+                    HorizontalAlignment="Right"
+                    Margin="0,16,0,0">
             <Button Content="Close"
                     Width="88"
                     Margin="0,0,8,0"

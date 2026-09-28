@@ -17,6 +17,12 @@
          binding redirects on .NET Framework. -->
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <GenerateBindingRedirectsOutputType>true</GenerateBindingRedirectsOutputType>
+    <!--
+      $(NuGetPackageRoot) is not defined inside WPF's markup-compile temp project, so fall
+      back to the default package location.
+    -->
+    <MvvmGeneratorPath Condition="'$(MvvmGeneratorPath)' == '' and '$(NuGetPackageRoot)' != ''">$(NuGetPackageRoot)communitytoolkit.mvvm\8.4.2\analyzers\dotnet\roslyn4.12\cs\CommunityToolkit.Mvvm.SourceGenerators.dll</MvvmGeneratorPath>
+    <MvvmGeneratorPath Condition="'$(MvvmGeneratorPath)' == ''">$(UserProfile)\.nuget\packages\communitytoolkit.mvvm\8.4.2\analyzers\dotnet\roslyn4.12\cs\CommunityToolkit.Mvvm.SourceGenerators.dll</MvvmGeneratorPath>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -44,6 +50,8 @@
     <Reference Include="System.Core" />
     <Reference Include="System.Data" />
     <Reference Include="System.Drawing" />
+    <!-- Only for the standard colour picker in the Settings window. -->
+    <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Net.Http" />
     <!-- DataContractJsonSerializer, used to persist AppSettings. -->
     <Reference Include="System.Runtime.Serialization" />
@@ -58,6 +66,14 @@
   <ItemGroup>
     <PackageReference Include="CommunityToolkit.Mvvm">
       <Version>8.4.2</Version>
+      <!--
+        Analyzers are excluded here and re-added explicitly below. WPF's markup-compile
+        pass (the _wpftmp project) does not receive analyzers from PackageReference, so
+        [ObservableProperty]/[RelayCommand] members would be missing during that pass and
+        the build would fail. Referencing the generator as an <Analyzer> item makes it
+        flow into both the markup pass and the real compile.
+      -->
+      <ExcludeAssets>analyzers</ExcludeAssets>
     </PackageReference>
     <PackageReference Include="Hardcodet.NotifyIcon.Wpf">
       <Version>1.1.0</Version>
@@ -72,6 +88,10 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
+  </ItemGroup>
+  <ItemGroup>
+    <!-- CommunityToolkit.Mvvm source generator (must be a path into the NuGet cache). -->
+    <Analyzer Include="$(MvvmGeneratorPath)" />
   </ItemGroup>
   <ItemGroup>
     <!-- Embedded so it can be referenced as pack://application:,,,/Subliminal.ico -->
@@ -92,6 +112,15 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Services\StartupRegistration.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Converters\HexColor.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Converters\HexToBrushConverter.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Converters\PercentToOpacityConverter.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="SettingsWindow.xaml.cs">

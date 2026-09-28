@@ -19,8 +19,16 @@ namespace Subliminal.Services
         [DataMember]
         public bool StartWithWindows { get; set; }
 
+        /// <summary>Overlay colour as #RRGGBB. Stored as hex so it stays readable in JSON.</summary>
         [DataMember]
-        public bool ShowTrayNotifications { get; set; } = true;
+        public string EditColorHex { get; set; } = "#60A5FA";
+
+        /// <summary>Overlay opacity as a percentage, 0-100.</summary>
+        [DataMember]
+        public int Transparency { get; set; } = 95;
+
+        [DataMember]
+        public string Text { get; set; } = string.Empty;
 
         public static AppSettings Load()
         {

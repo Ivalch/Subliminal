@@ -44,11 +44,6 @@ namespace Subliminal.Services
             return image;
         }
 
-        public void ShowBalloon(string title, string message)
-        {
-            _taskbarIcon.ShowBalloonTip(title, message, BalloonIcon.Info);
-        }
-
         private ContextMenu BuildContextMenu()
         {
             var menu = new ContextMenu();
