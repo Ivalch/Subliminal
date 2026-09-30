@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Windows.Threading;
 using Subliminal.Mvvm;
 using Subliminal.Services;
-using System.Diagnostics;
 
 namespace Subliminal.ViewModels
 {
@@ -201,8 +200,6 @@ namespace Subliminal.ViewModels
 
 
             }
-
-            Debug.WriteLine($"DesiredOpacity: {DesiredOpacity}, CurrentOpacity: {CurrentOpacity}");
         }
 
         private void BeginPhase(Phase phase)
