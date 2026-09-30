@@ -55,9 +55,9 @@ namespace Subliminal.Services
         [DataMember]
         public string EditColorHex { get; set; } = "#60A5FA";
 
-        /// <summary>Overlay transparency as a percentage, 0-100. 100 is fully invisible.</summary>
+        /// <summary>Overlay transparency as an alpha channel value. 255 is fully invisible.</summary>
         [DataMember]
-        public int Transparency { get; set; } = 95;
+        public int Transparency { get; set; } = 250;
 
         /// <summary>Seconds spent fading a line in and out, 1-10.</summary>
         [DataMember]
@@ -196,9 +196,9 @@ namespace Subliminal.Services
             {
                 settings.Transparency = 0;
             }
-            else if (settings.Transparency > 100)
+            else if (settings.Transparency > 255)
             {
-                settings.Transparency = 100;
+                settings.Transparency = 255;
             }
 
             // A hand-edited file can hold out-of-range phase durations; keep them legal.

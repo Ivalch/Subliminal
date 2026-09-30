@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Windows.Threading;
 using Subliminal.Mvvm;
 using Subliminal.Services;
+using System.Diagnostics;
 
 namespace Subliminal.ViewModels
 {
@@ -24,7 +25,7 @@ namespace Subliminal.ViewModels
         private List<string> _lines = new List<string>();
 
         private string _displayText = string.Empty;
-        private int _transparency = 95;
+        private int _transparency = 250;
         private string _colorHex = "#FFFFFF";
         private int _appearSeconds = 5;
         private int _showTimeSeconds = 10;
@@ -49,7 +50,7 @@ namespace Subliminal.ViewModels
             set { SetProperty(ref _displayText, value); }
         }
 
-        /// <summary>Target transparency percentage from settings. 100 is fully invisible.</summary>
+        /// <summary>Target transparency from settings. 255 is fully invisible.</summary>
         public int Transparency
         {
             get { return _transparency; }
@@ -120,7 +121,7 @@ namespace Subliminal.ViewModels
         /// <summary>Opacity the line settles at once it has fully appeared.</summary>
         public double DesiredOpacity
         {
-            get { return Math.Max(0.0, Math.Min(100.0, 100 - Transparency)) / 100.0; }
+            get { return Math.Max(0.0, Math.Min(255.0, 255 - Transparency)) / 255.0; }
         }
 
         /// <summary>False when no texts are saved, so the overlay renders nothing.</summary>
@@ -197,7 +198,11 @@ namespace Subliminal.ViewModels
                     }
 
                     break;
+
+
             }
+
+            Debug.WriteLine($"DesiredOpacity: {DesiredOpacity}, CurrentOpacity: {CurrentOpacity}");
         }
 
         private void BeginPhase(Phase phase)

@@ -98,7 +98,7 @@ namespace Subliminal.ViewModels
             // settings file cannot push it out of range.
             _settings.StartWithWindows = StartWithWindows;
             _settings.EditColorHex = EditColorHex;
-            _settings.Transparency = Transparency < 0 ? 0 : (Transparency > 100 ? 100 : Transparency);
+            _settings.Transparency = Transparency < 0 ? 0 : (Transparency > 255 ? 255 : Transparency);
             _settings.AppearSeconds = ClampSeconds(AppearSeconds);
             _settings.ShowTimeSeconds = ClampSeconds(ShowTimeSeconds);
             _settings.FontSize = AppSettings.SnapFontSize(FontSize);
